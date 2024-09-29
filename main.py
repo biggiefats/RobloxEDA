@@ -1,5 +1,7 @@
 # Roblox EDA
 
+import pandas as pd
+
 """
 Questions/Hypotheses to explore:
 
@@ -34,3 +36,14 @@ Does the general attributes of success to a game define
 the unique letters in the game?
 (Decision Tree Classifier)
 """
+
+class RobloxEDA:
+    def __init__(self):
+        """
+        Class used to handle the hypotheses testing and question answering.
+        """
+        
+        self.df = pd.read_csv(r'roblox_games.csv', index_col=0)
+        print(self.df)
+        
+data = RobloxEDA()
