@@ -23,3 +23,6 @@ of current players to total players than games that do not.
 
 - Classify games by how many **unique** letters they have. Do the **general metrics** 
   to a game define the unique letters in the game?
+
+## Tip
+Run the **scrape.py** file as is to generate a fresh dataset.
