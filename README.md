@@ -26,3 +26,7 @@ of current players to total players than games that do not.
 
 ## Tip
 Run the **scrape.py** file as is to generate a fresh dataset.
+
+## Results
+N/A
+
