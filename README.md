@@ -30,7 +30,8 @@ The data found was sourced from **https://romonitorstats.com/**.
   to a game define the unique letters in the game?
 
 ## Tip
-Run the **scrape.py** file as is to generate a fresh dataset.
+Run the **scrape.py** file as is to generate a fresh dataset. However, the dataset
+may not align with the results found during development.
 
 ## Results
 The results for each question/hypothesis are found in the **class method** that
