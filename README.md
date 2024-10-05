@@ -2,12 +2,15 @@
 
 ## Overview
 An Explanatory Data Analysis project that uses machine learning algorithms to test hypotheses/questions.
-This dataset was formed by a combination of **Selenium** and **BeautifulSoup**.
+
+This dataset was formed by a combination of **Selenium** and **BeautifulSoup**, and data was represented
+and clean by **Pandas** and **Regular Expressions**.
 
 ## Questions / Hypotheses
 
-- Games that include a reference to an update in their title will have a **greater** ratio
-of current players to total players than games that do not.
+- Games that include a reference to an update in the **start** of their title will have a greater ratio 
+  of current players to total players than games that do not include a reference to an update at the 
+  start of their title. This includes games that reference the update at the end of their title.
 
 - There is a **quadratic** proportion between one of two variables in this dataset.
 
@@ -28,5 +31,6 @@ of current players to total players than games that do not.
 Run the **scrape.py** file as is to generate a fresh dataset.
 
 ## Results
-N/A
+The results for each question/hypothesis are found in the **class method** that
+relates to such question/hypothesis.
 
