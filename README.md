@@ -6,6 +6,8 @@ An Explanatory Data Analysis project that uses machine learning algorithms to te
 This dataset was formed by a combination of **Selenium** and **BeautifulSoup**, and data was represented
 and clean by **Pandas** and **Regular Expressions**.
 
+The data found was sourced from **https://romonitorstats.com/**.
+
 ## Questions / Hypotheses
 
 - Games that include a reference to an update in the **start** of their title will have a greater ratio 
