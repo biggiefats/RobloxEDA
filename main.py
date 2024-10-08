@@ -1,23 +1,15 @@
 # Roblox EDA
 
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import r2_score
 
 """
-Questions/Hypotheses to explore:
-
-Games that include a reference to an update
-in the start of their title will have a greater
-ratio of current players to total players than
-games that do not include a reference to an update
-at the start of their title. This includes games
-that reference the update at the end of their title.
-
-There is a quadratic proportion between 
-two variables in this dataset.
-(Linear Regression / Poly Features)
+Questions/Hypotheses LEFT to explore:
 
 Is the length of a title an indicator of the rating
 of the game above 90%?
@@ -81,7 +73,12 @@ class RobloxEDA:
         total visits, and is sat at #36 in terms of active
         players. It stands as one of the anomalies of their
         retention, for most games near that rank have above
-        500,000,000 visits.
+        500,000,000 visits. 
+        
+        Upon research, this is due to the
+        love that Roblox players have for games that are inspired
+        on Anime (japanese animation) - this game capitalizes of 
+        such medium of entertainment.
         """
         
         # Add ratio and clean to find updated games
@@ -92,9 +89,92 @@ class RobloxEDA:
         pd.set_option('display.float_format', '{:.8f}'.format)
         whole_data = self.df['Retention'].agg([np.mean, min, max, np.median])
         update_data = self.update_df['Retention'].agg([np.mean, min, max, np.median])
-        print(whole_data)
-        print(update_data)
-        print(self.df[self.df['Retention'] > 0.007])
+        
+        # Showing data
+        # print(whole_data)
+        # print(update_data)
+        # print(self.df[self.df['Retention'] > 0.007])
+        
+    def hypothesis2(self):
+        """
+        Hypothesis:
+        There is a quadratic proportion between 
+        two variables in this dataset.
+        
+        Result:
+        The two variables I decided to pick, based on visual understanding,
+        was the relationship between likes and dislikes.
+        Surprisingly, when we compare the quadratic regression line with
+        a linear regression line, they achieve a similar 'r2_score' (e.g.
+        how well they fit with the line); their difference in success is
+        0.000099030, to 9dp (essentially 0.0001, which is 0.01%), so these
+        variables actually fit a linear regression line. I believe that this
+        is due to how dislikes becomes more spread out with more likes and then
+        there are the odd outperforming games that have extremes of likes and
+        dislikes, so the regression algorithm is biased towards the cluster
+        of points with low likes and dislikes.
+        
+        Additional Findings:
+        The game with the 4th highest dislikes is Tower of Hell, a game
+        with focuses on players having to reach the top of a tower by completing
+        an obstacle course (think Total Wipeout, Ninja Warrior, Takeshi's Castle).
+        The games in the top 5, with this game, have ranks (11, 2, 6, 47) that are relatively
+        close to the top games in dislikes but this game is a bit further out. This is due
+        to the rage that is induced by such a game; when you make a mistake, you fall down
+        the tower, which is heavily taxing on patience. Games such as Getting Over It and
+        Only Up! share this gameplay loop.
+        
+        The game, Brookhaven RP, is in the top 5 for both likes and dislikes. This game is
+        a role-playing game where you essentially simulate a life as a human, similar to The
+        Sims, but with more interaction from the player. The game might have a lot of likes
+        and dislikes due to the same reasons: roleplaying, player relationships, creative
+        requirements (the experience is driven by the player heavily, rather than the game
+        providing the creativity) or other aspects beyond the surface. It may be hard for
+        me to pinpoint the real reasons, as those games are harder to decipher and understand
+        from a layman's point of view.
+        """
+        # seaborn.pairplot will pair all possible variables
+        # sns.pairplot(data=self.df, height=1.2)
+        
+        # check aggregate functions to scale data, so axis values are human readable
+        # print(self.df['Likes'].mean()) - 316879.215
+        # print(self.df['Dislikes'].mean()) - 4230.899
+        x = self.df['Likes'] // 4000
+        X = x.values.reshape(-1,1)
+        y = self.df['Dislikes'] // 4000
+        
+        # highest dislikes and likes
+        top_x = self.df.loc[x.sort_values(ascending=False).head(5).index]
+        top_y = self.df.loc[y.sort_values(ascending=False).head(5).index]
+        # print(top_x)
+        # print()
+        # print(top_y)
+        
+        # algorithms
+        # quadratic regression line
+        quadratic = PolynomialFeatures(degree=2, include_bias=False)
+        quadratic_X = quadratic.fit_transform(X)
+        model = LinearRegression()
+        model.fit(quadratic_X, y)
+        quad_y = model.predict(quadratic_X)
+        
+        # linear regression line
+        model = LinearRegression()
+        model.fit(X, y)
+        linear_y = model.predict(X)
+        
+        difference_in_models = abs(r2_score(y, quad_y) - r2_score(y, linear_y))
+        # print(f"{difference_in_models:.9f}") - 0.0001
+        
+        # data visualization
+        fig, ax = plt.subplots(figsize=(6,6))
+        ax.set_title("Likes against Dislikes for Roblox Games")
+        ax.set_xlabel("Likes (4000s)")
+        ax.set_ylabel("Dislikes (4000s)")
+        ax.plot(X, quad_y, color='cyan') # quadratic regression line
+        ax.plot(X, linear_y, color='red') # linear regression line
+        sns.scatterplot(x=x, y=y, hue=self.df['Likes'], palette='husl', ax=ax)
+        plt.show()
         
 data = RobloxEDA()
-data.hypothesis1()
+data.hypothesis2()
