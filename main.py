@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score
 
@@ -176,5 +176,67 @@ class RobloxEDA:
         sns.scatterplot(x=x, y=y, hue=self.df['Likes'], palette='husl', ax=ax)
         plt.show()
         
+    def hypothesis3(self):
+        """
+        Question:
+        Is the length of the title an indicator of the rating being above 90%?
+        
+        Result:
+        The model's score is 67%. This is an indication that the length
+        of a title does not indicate a game as having a rating greater than 90%.
+        An ideal score would be above 85%, which this is not.
+        
+        The logistic regression line, as the length of titles increases, assumes that
+        there is an increasing chance that the game has a rating greater than 90%.
+        
+        Additional Findings:
+        The (presumed) ideal length for a title to get a 90.0+ rating is to have the title
+        between 16 and 19 characters long. Surprisingly, 19 games that have a 90.0+ rating
+        have 19 characters in their title. The mean length of a title is also the median
+        length of a title but is NOT the mode length of a title, which doesn't make it
+        qualifiable as a normal distribution.
+        """
+        # Defining variables
+        self.df['High Rating'] = (self.df['Rating'] > 90).astype(int)
+        self.df['Length of Title'] = list(map(lambda x: len(x), self.df['Name']))
+        
+        x = self.df['Length of Title']
+        X = x.values.reshape(-1,1)
+        y = self.df['High Rating']
+        
+        # Logistic regression
+        model = LogisticRegression(solver='liblinear', random_state=0)
+        model.fit(X, y)
+        a = model.intercept_[0]
+        b = model.coef_[0][0]
+        # Equation of logistic curve
+        logistic_y = 1 / (1 + np.exp(-(a + b * self.df['Length of Title'])))
+        
+        # Stats
+        # Making series to show the count of games that were 90.0+ in rating, for each possible length
+        # print(model.score(X, y))
+        rating_length_dict = self.df[self.df['High Rating'] == 1].groupby(by='Length of Title').groups
+        item_frequency = [len(value) for value in rating_length_dict.values()]
+        freq_df = pd.Series(item_frequency, index=rating_length_dict.keys())
+        print(pd.Series(rating_length_dict.keys()).agg([min, max, np.median, np.std, np.mean]))
+        # print(freq_df)
+        
+        # Visualisation
+        fig = plt.figure(figsize=(9,6))
+        fig.suptitle("Does the Length of a Title Correlate with High Rating?")
+        # Logistic Regression 'Curve' with scatter plot
+        ax = fig.add_subplot(121)
+        ax.set_xlabel("Length of Title (characters)")
+        ax.set_ylabel("High Rating? (Above 90.0)")
+        sns.scatterplot(data=self.df, x='Length of Title', y='High Rating', hue='Rating', palette='husl', ax=ax)
+        ax.plot(self.df['Length of Title'], logistic_y, color='black')
+        
+        # Frequency plot of length of titles
+        ax = fig.add_subplot(122)
+        ax.set_xlabel("Length of Title (characters)")
+        ax.set_ylabel("Frequency")
+        ax.plot(freq_df.index, freq_df.values, color='black')
+        plt.show()
+        
 data = RobloxEDA()
-data.hypothesis2()
+data.hypothesis3()
