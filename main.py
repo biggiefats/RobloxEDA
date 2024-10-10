@@ -11,10 +11,6 @@ from sklearn.metrics import r2_score
 """
 Questions/Hypotheses LEFT to explore:
 
-Is the length of a title an indicator of the rating
-of the game above 90%?
-(Logistic Regression)
-
 Are there common words used in games that have a high
 all-time visits and a high favourites count?
 (Clustering)
