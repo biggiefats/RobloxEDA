@@ -440,4 +440,4 @@ class RobloxEDA:
                 print(df.query(f"Cluster == {group}"))
         
 data = RobloxEDA()
-data.hypothesis5()
+data.hypothesis2()
