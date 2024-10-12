@@ -351,12 +351,12 @@ class RobloxEDA:
         Answer:
         I decided to use DBSCAN to detect outliers.
         
-        DBSCAN detects 5 clusters:
-        -1 (Noise): 23
-        0 (Core): 961
-        1 (Outlying Group 1): 5
-        2 (Outlying Group 2): 5
-        3 (Outlying Group 3): 6
+        DBSCAN detects 5 clusters:\n
+        -1 (Noise): 23\n
+        0 (Core): 961\n
+        1 (Outlying Group 1): 5\n
+        2 (Outlying Group 2): 5\n
+        3 (Outlying Group 3): 6\n
         
         The reason by Cluster -1 is called 'noise' is that DBSCAN is an acronym for
         'Density-Based Spatial Clustering of Applications with Noise'. The noise refers
