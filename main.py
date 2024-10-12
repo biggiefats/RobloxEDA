@@ -6,16 +6,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, MinMaxScaler
+from sklearn.cluster import DBSCAN
+from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import r2_score
 from collections import defaultdict
 
 """
 Questions/Hypotheses LEFT to explore:
-
-What games have disproportionate like and dislike counts,
-given their ratio?
-(DBSCAN/Clustering)
 
 Do the likes, dislikes and total visits indicate whether
 or not a game's current players is above 10% of the number
@@ -278,8 +276,28 @@ class RobloxEDA:
         people to play the game multiple times.
         
         Additional Findings:
-        Other words from the top 25 words include 'tower', 'x' (multiplier),
-        'car', 'legends', 'life', 'obby', 'speed' and 'survive'.
+        Other words from the top 25 words include 'tower', 'x',
+        'car', 'legends', 'life', 'limited', 'obby', 'speed' and 'survive'.
+        The 'x' alludes to a multiplier to a statistic in a game on top of
+        its base increment, or it can refer to a collaboration of different
+        developers, groups or companies.
+        
+        Furthermore, when we look at ALL entires, the trends change slightly:
+        Here are the top 10 words:
+        1) 'simulator'
+        2) 'the'
+        3) 'obby'
+        4) 'tycoon'
+        5) 'update'
+        6) 'new'
+        7) 'rp'
+        8) 'a'
+        9) 'upd'
+        10) 'x'
+        
+        A word that wasn't originally in the top games was 'obby'. This may
+        be due to the fall of obby games in modern Roblox, which were popular
+        in the earlier stages of Roblox.
         """   
         
         # Data
@@ -289,14 +307,14 @@ class RobloxEDA:
         
         # Get the ranking for each game by making a secret sum that looks at favourites and visits
         for title in self.df['Name']:
-            favourite_score = list(favourites_df[favourites_df['Name'] == title]['Rank'].replace('#', '').index.astype(int)[0]
+            favourite_score = list(favourites_df[favourites_df['Name'] == title]['Rank'].replace('#', '').index.astype(int))[0]
             visit_score = list(visits_df[visits_df['Name'] == title]['Rank'].replace('#', '').index.astype(int))[0]
             secret_sum = favourite_score + visit_score
             secret_sums.append(secret_sum)
         
         # Adding column to dataframe with secret sum of rankings for each game
         self.df['secret_sum'] = pd.Series(secret_sums).values
-        top_games_df = self.df.sort_values(by='secret_sum').reset_index().iloc[:, :8].head(100)
+        top_games_df = self.df.sort_values(by='secret_sum').reset_index().iloc[:, :8]
         
         # Counting words and storing results
         word_frequency_map = defaultdict(int)
@@ -324,6 +342,102 @@ class RobloxEDA:
         sns.barplot(data=word_frequency_df.head(25), x='Word', y='Count', hue='Count', palette='viridis', ax=ax)
         ax.set_xticklabels(labels=ax.get_xticklabels(), fontsize=6)
         plt.show()
-    
+        
+    def hypothesis5(self):
+        """
+        Question:
+        What games have disproportionate like and dislike counts?
+        
+        Answer:
+        I decided to use DBSCAN to detect outliers.
+        
+        DBSCAN detects 5 clusters:
+        -1 (Noise): 23
+        0 (Core): 961
+        1 (Outlying Group 1): 5
+        2 (Outlying Group 2): 5
+        3 (Outlying Group 3): 6
+        
+        The reason by Cluster -1 is called 'noise' is that DBSCAN is an acronym for
+        'Density-Based Spatial Clustering of Applications with Noise'. The noise refers
+        to any point that could not be reached via a proximity radius generated
+        from any core point.
+        
+        All the games that are considered to be noise, that are in Cluster -1, are 
+        games that are beloved to the platform, and have existed for some amount of 
+        time. The outlier in the noise cluster would be 'Speed Run 4 🍩😋[UPDATE]', 
+        as it sits near the games of cluster 1, due to its low like and dislike count.
+        
+        Clusters 1, 2 and 3 all sit near each other in terms of their like counts,
+        but are further enough from the games in cluster 0 to be considered outliers.
+        
+        Cluster 1 has games that have around 2.25 million likes, which are RIVALS,
+        Bee Swarm Simulator, Flee The Facility, PLS DONATE and Phantom Forces.
+        These games all are doing quite well in the ranks, sitting beyond the top 200
+        games on Roblox in activity. They all also have a like to dislike ratio of
+        92+ and all have over 1 billion visits expect RIVALS, which is a fairly new
+        game with 837 million visits.
+        
+        Cluster 2 has games that have around 1.95 million likes, which are Anime Defenders,
+        Evade, Shindo Life, Death Ball and Anime Dimensions Simulator. All these games are
+        the top games of the platform (above top 100) expect Anime Dimensions Simulator,
+        which may be an old game due to it sharing similar statistics with the rest
+        of these games.
+        
+        Cluster 3 has games with games near 1.9 million likes, with little variance.
+        The games include Theme Park Tycoon 2, Funky Friday, Lumber Tycoon 2,
+        Epic Minigames, Mad City: Chapter 2 and Brreaking Point. None of these games
+        are in the top 100, indicating that these games used to be popular but are now
+        not, as they all have similar statistics to games in Cluster 2. The ratios
+        sit between 87 and 90, with two games having 83 and 81 respectively.
+        3 of the 6 games in Cluster 3 contain the number '2' in the title.
+        """
+        # Inner method to find elbow (optimal epsilon value) for DBSCAN algorithm
+        def elbow(X):
+            # Find 4 nearest neighbours for all values in X
+            nn = NearestNeighbors(n_neighbors=4)
+            nn.fit(X)
+            # Finds distances and positions for each neighbour
+            distances, indices = nn.kneighbors()
+            sorted_distances = np.sort(distances, axis=0)
+            
+            # Visualisation
+            fig, ax = plt.subplots(figsize=(6,6))
+            ax.set_xlabel("Point Number")
+            ax.set_ylabel("Distance from Furthest Point")
+            ax.plot(sorted_distances[:, 3])
+            ax.axhline(y=1.34e+05, linestyle="dotted", color="black") # Measurement purposes
+            plt.show()
+        
+        # DBSCAN stuff
+        df = self.df
+        
+        # Find elbow / optimal Ɛ | optimal = approx. 134,000
+        # elbow(df[['Dislikes', 'Likes']])
+        
+        # Type of clustering that uses proximity radii of radius Ɛ to determine clusters
+        # Min-samples is minimum samples required in a circle to be considered a part of a cluster
+        # These points are called core points, and they can now generate their own radius
+        model = DBSCAN(eps=1.34e+05, min_samples=4)
+        model.fit(df[['Dislikes', 'Likes']])
+        df['Cluster'] = model.labels_
+        
+        # Visualisation
+        fig = plt.figure(figsize=(12,9))
+        fig.suptitle("Likes and Dislikes for Each Game")
+        ax = fig.add_subplot(111)
+        sns.scatterplot(data=df, x='Likes', y='Dislikes', hue='Cluster', palette='viridis', ax=ax)
+        plt.show()
+        
+        # Additional, but important info 
+        # Number of points in each group
+        counts = df.groupby(by='Cluster').count()
+        
+        # Details about games in each group
+        for group in sorted(list(df['Cluster'].unique())):
+            if group != 0:
+                print(f"\nGROUP {group}:")
+                print(df.query(f"Cluster == {group}"))
+        
 data = RobloxEDA()
-data.hypothesis4()
+data.hypothesis5()
