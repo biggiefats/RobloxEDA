@@ -1,5 +1,6 @@
 # Roblox EDA
 
+import re
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -7,17 +8,14 @@ import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score
+from collections import defaultdict
 
 """
 Questions/Hypotheses LEFT to explore:
 
-Are there common words used in games that have a high
-all-time visits and a high favourites count?
-(Clustering)
-
 What games have disproportionate like and dislike counts,
 given their ratio?
-(DBSCAN)
+(DBSCAN/Clustering)
 
 Do the likes, dislikes and total visits indicate whether
 or not a game's current players is above 10% of the number
@@ -233,6 +231,99 @@ class RobloxEDA:
         ax.set_ylabel("Frequency")
         ax.plot(freq_df.index, freq_df.values, color='black')
         plt.show()
+    
+    def hypothesis4(self):
+        """
+        Question:
+        Are there common words used in games that have a high
+        all-time visits and a high favourites count?
         
+        Results:
+        Selecting the top 150 games, we find that:
+        
+        1ST: 'update' and 'simulator'
+        'update' being 1st increases the validity of the first hypothesis
+        method; games mentioning the word 'update' do have better
+        metrics. This is to be expected with all-time visits being
+        a metric of success for this question, as updates promotes
+        loyalty to a game.
+        
+        'simulator' is a genre of game that has a player take the role
+        of someone in a simulated environment such that there is a long
+        progression system involved in the game with elements including
+        luck, achievements, skill trees or other 'grinding' elements.
+        These games promote multiple visits as certain parts of the game
+        have players play the game for multiple hours in a singular session.
+        Simulator games also have players favourite the game for certain
+        items and perks, which are useful EARLY in the game, where a player
+        is most desperate to get something.
+        
+        2ND: 'the'
+        As this is a determiner, it would be expected to find this word 
+        in the top words. Words such as 'of', 'a', 'to' and 'and' are 
+        also of similar nature; they allow for a more rigid game title.
+        
+        3RD: 'rp' and 'tycoon'
+        'rp' is an abbreviation of roleplay. roleplaying games are the
+        same as how I described simulator games expect that there isn't
+        as much progression required - the progression is more how you define
+        it whereas in a simulator, certain metrics define progression. For
+        kids, it may be expected that they like to ideate and imagine things
+        due to their stimulation to things and their minds not knowing
+        limits well.
+        
+        'tycoon' games are bound to an area usually being the part of progression
+        (e.g. upgrade a house by adding things in the house) and have players
+        passively generate a currency to progress. The 'grinding' aspect promotes
+        people to play the game multiple times.
+        
+        Additional Findings:
+        Other words from the top 25 words include 'tower', 'x' (multiplier),
+        'car', 'legends', 'life', 'obby', 'speed', 'survive'
+        """   
+        
+        # Data
+        secret_sums = list()
+        favourites_df = self.df.sort_values(by=['Favourites'], ascending=False).reset_index()
+        visits_df = self.df.sort_values(by=['Visits'], ascending=False).reset_index()
+        
+        # Get the ranking for each game by making a secret sum that looks at favourites and visits
+        for title in self.df['Name']:
+            favourite_score = list(favourites_df[favourites_df['Name'] == title]['Rank'].replace('#', '').index)[0]
+            visit_score = list(visits_df[visits_df['Name'] == title]['Rank'].replace('#', '').index.astype(int))[0]
+            secret_sum = favourite_score + visit_score
+            secret_sums.append(secret_sum)
+        
+        # Adding column to dataframe with secret sum of rankings for each game
+        self.df['secret_sum'] = pd.Series(secret_sums).values
+        top_games_df = self.df.sort_values(by='secret_sum').reset_index().iloc[:, :8].head(100)
+        
+        # Counting words and storing results
+        word_frequency_map = defaultdict(int)
+        word_frequency_df = pd.DataFrame(columns=['Word', 'Count'])
+        
+        # Filtering non-words out of words
+        for title in top_games_df['Name']:
+            title_words = title.split(' ')
+            # Get digits and emojis out and add it to word_frequency_map
+            for word in title_words:
+                word = re.sub(r'[^\w]*|[\d]*', '', word).lower()
+                if word.isalpha():
+                    word_frequency_map[word] += 1
+                    
+        # Get words and items into a dataframe
+        word_frequency_map = dict(sorted(word_frequency_map.items(), key=lambda item: item[1], reverse=True))
+        for key, value in word_frequency_map.items():
+            word_frequency_df.loc[len(word_frequency_df)] = key, value
+        
+        # Visualisation
+        fig = plt.figure(figsize=(12,9))
+        fig.suptitle("Words Used in Games with High All-Time Visits and Favourites Count")
+        ax = fig.add_subplot(111)
+        ax.set_title("Most Frequent Words")
+        sns.barplot(data=word_frequency_df.head(25), x='Word', y='Count', hue='Count', palette='viridis', ax=ax)
+        ax.set_xticklabels(labels=ax.get_xticklabels(), fontsize=6)
+        plt.show()
+    
 data = RobloxEDA()
-data.hypothesis3()
+data.hypothesis4()
