@@ -207,7 +207,7 @@ class RobloxEDA:
         logistic_y = 1 / (1 + np.exp(-(a + b * self.df['Length of Title'])))
         
         # Stats
-        # Making series to show the count of games that were 90.0+ in rating, for each possible length
+        # Making series to show the count of games that were 90.0+ in rating, for each possible length for a title
         # print(model.score(X, y))
         rating_length_dict = self.df[self.df['High Rating'] == 1].groupby(by='Length of Title').groups
         item_frequency = [len(value) for value in rating_length_dict.values()]
@@ -279,7 +279,7 @@ class RobloxEDA:
         
         Additional Findings:
         Other words from the top 25 words include 'tower', 'x' (multiplier),
-        'car', 'legends', 'life', 'obby', 'speed', 'survive'
+        'car', 'legends', 'life', 'obby', 'speed' and 'survive'.
         """   
         
         # Data
@@ -289,7 +289,7 @@ class RobloxEDA:
         
         # Get the ranking for each game by making a secret sum that looks at favourites and visits
         for title in self.df['Name']:
-            favourite_score = list(favourites_df[favourites_df['Name'] == title]['Rank'].replace('#', '').index)[0]
+            favourite_score = list(favourites_df[favourites_df['Name'] == title]['Rank'].replace('#', '').index.astype(int)[0]
             visit_score = list(visits_df[visits_df['Name'] == title]['Rank'].replace('#', '').index.astype(int))[0]
             secret_sum = favourite_score + visit_score
             secret_sums.append(secret_sum)
