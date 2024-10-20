@@ -8,6 +8,16 @@ and clean by **Pandas** and **Regular Expressions**.
 
 The data found was sourced from **https://romonitorstats.com/**.
 
+## Prerequisites
+To run the program, you will need the following libraries/packages via `pip install [name]`: 
+- Regular Expressions -> `regex`
+- Pandas -> `pandas`
+- Seaborn -> `seaborn`
+- NumPy -> `numpy`
+- Scikit-Learn -> `scikit-learn`
+- BeautifulSoup -> `beautifulsoup4`
+- Selenium -> `selenium`
+
 ## Questions / Hypotheses
 
 - Games that include a reference to an update in the **start** of their title will have a greater ratio 
