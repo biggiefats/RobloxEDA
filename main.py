@@ -73,16 +73,13 @@ class RobloxEDA:
         such medium of entertainment.
         """
         
-        # Add ratio and clean to find updated games
         self.df['Retention'] = self.df['Active'] / self.df['Visits']
-        # Regex is hard 
+        # Regex brainrot 
         self.update_df = self.df[self.df['Name'].str.match(r"^\[[^\]]*\][^\[]*$")]
-        # Avoiding scientific notation and finding out information about the data
         pd.set_option('display.float_format', '{:.8f}'.format)
         whole_data = self.df['Retention'].agg([np.mean, min, max, np.median])
         update_data = self.update_df['Retention'].agg([np.mean, min, max, np.median])
         
-        # Showing data
         # print(whole_data)
         # print(update_data)
         # print(self.df[self.df['Retention'] > 0.007])
@@ -125,32 +122,26 @@ class RobloxEDA:
         me to pinpoint the real reasons, as those games are harder to decipher and understand
         from a layman's point of view.
         """
-        # seaborn.pairplot will pair all possible variables
         # sns.pairplot(data=self.df, height=1.2)
         
-        # check aggregate functions to scale data, so axis values are human readable
         # print(self.df['Likes'].mean()) - 316879.215
         # print(self.df['Dislikes'].mean()) - 4230.899
         x = self.df['Likes'] // 4000
         X = x.values.reshape(-1,1)
         y = self.df['Dislikes'] // 4000
         
-        # highest dislikes and likes
         top_x = self.df.loc[x.sort_values(ascending=False).head(5).index]
         top_y = self.df.loc[y.sort_values(ascending=False).head(5).index]
         # print(top_x)
         # print()
         # print(top_y)
         
-        # algorithms
-        # quadratic regression line
         quadratic = PolynomialFeatures(degree=2, include_bias=False)
         quadratic_X = quadratic.fit_transform(X)
         model = LinearRegression()
         model.fit(quadratic_X, y)
         quad_y = model.predict(quadratic_X)
         
-        # linear regression line
         model = LinearRegression()
         model.fit(X, y)
         linear_y = model.predict(X)
@@ -158,13 +149,12 @@ class RobloxEDA:
         difference_in_models = abs(r2_score(y, quad_y) - r2_score(y, linear_y))
         # print(f"{difference_in_models:.9f}") - 0.0001
         
-        # data visualization
         fig, ax = plt.subplots(figsize=(6,6))
         ax.set_title("Likes against Dislikes for Roblox Games")
         ax.set_xlabel("Likes (4000s)")
         ax.set_ylabel("Dislikes (4000s)")
-        ax.plot(X, quad_y, color='cyan') # quadratic regression line
-        ax.plot(X, linear_y, color='red') # linear regression line
+        ax.plot(X, quad_y, color='cyan')
+        ax.plot(X, linear_y, color='red')
         sns.scatterplot(x=x, y=y, hue=self.df['Likes'], palette='husl', ax=ax)
         plt.show()
         
@@ -188,7 +178,6 @@ class RobloxEDA:
         length of a title but is NOT the mode length of a title, which doesn't make it
         qualifiable as a normal distribution.
         """
-        # Defining variables
         self.df['High Rating'] = (self.df['Rating'] > 90).astype(int)
         self.df['Length of Title'] = list(map(lambda x: len(x), self.df['Name']))
         
@@ -196,15 +185,12 @@ class RobloxEDA:
         X = x.values.reshape(-1,1)
         y = self.df['High Rating']
         
-        # Logistic regression
         model = LogisticRegression(solver='liblinear', random_state=0)
         model.fit(X, y)
         a = model.intercept_[0]
         b = model.coef_[0][0]
-        # Equation of logistic curve
         logistic_y = 1 / (1 + np.exp(-(a + b * self.df['Length of Title'])))
         
-        # Stats
         # Making series to show the count of games that were 90.0+ in rating, for each possible length for a title
         # print(model.score(X, y))
         rating_length_dict = self.df[self.df['High Rating'] == 1].groupby(by='Length of Title').groups
@@ -213,17 +199,14 @@ class RobloxEDA:
         print(pd.Series(rating_length_dict.keys()).agg([min, max, np.median, np.std, np.mean]))
         # print(freq_df)
         
-        # Visualisation
         fig = plt.figure(figsize=(9,6))
         fig.suptitle("Does the Length of a Title Correlate with High Rating?")
-        # Logistic Regression 'Curve' with scatter plot
         ax = fig.add_subplot(121)
         ax.set_xlabel("Length of Title (characters)")
         ax.set_ylabel("High Rating? (Above 90.0)")
         sns.scatterplot(data=self.df, x='Length of Title', y='High Rating', hue='Rating', palette='husl', ax=ax)
         ax.plot(self.df['Length of Title'], logistic_y, color='black')
         
-        # Frequency plot of length of titles
         ax = fig.add_subplot(122)
         ax.set_xlabel("Length of Title (characters)")
         ax.set_ylabel("Frequency")
@@ -300,7 +283,6 @@ class RobloxEDA:
         in the earlier stages of Roblox.
         """   
         
-        # Data
         secret_sums = list()
         favourites_df = self.df.sort_values(by=['Favourites'], ascending=False).reset_index()
         visits_df = self.df.sort_values(by=['Visits'], ascending=False).reset_index()
@@ -312,15 +294,12 @@ class RobloxEDA:
             secret_sum = favourite_score + visit_score
             secret_sums.append(secret_sum)
         
-        # Adding column to dataframe with secret sum of rankings for each game
         self.df['secret_sum'] = pd.Series(secret_sums).values
         top_games_df = self.df.sort_values(by='secret_sum').reset_index().iloc[:, :8]
         
-        # Counting words and storing results
         word_frequency_map = defaultdict(int)
         word_frequency_df = pd.DataFrame(columns=['Word', 'Count'])
         
-        # Filtering non-words out of words
         for title in top_games_df['Name']:
             title_words = title.split(' ')
             # Get digits and emojis out and add it to word_frequency_map
@@ -329,12 +308,10 @@ class RobloxEDA:
                 if word.isalpha():
                     word_frequency_map[word] += 1
                     
-        # Get words and items into a dataframe
         word_frequency_map = dict(sorted(word_frequency_map.items(), key=lambda item: item[1], reverse=True))
         for key, value in word_frequency_map.items():
             word_frequency_df.loc[len(word_frequency_df)] = key, value
         
-        # Visualisation
         fig = plt.figure(figsize=(12,9))
         fig.suptitle("Words Used in Games with High All-Time Visits and Favourites Count")
         ax = fig.add_subplot(111)
@@ -392,7 +369,6 @@ class RobloxEDA:
         sit between 87 and 90, with two games having 83 and 81 respectively.
         3 of the 6 games in Cluster 3 contain the number '2' in the title.
         """
-        # Inner method to find elbow (optimal epsilon value) for DBSCAN algorithm
         def elbow(X):
             # Find 4 nearest neighbours for all values in X
             nn = NearestNeighbors(n_neighbors=4)
@@ -401,7 +377,6 @@ class RobloxEDA:
             distances, indices = nn.kneighbors()
             sorted_distances = np.sort(distances, axis=0)
             
-            # Visualisation
             fig, ax = plt.subplots(figsize=(6,6))
             ax.set_xlabel("Point Number")
             ax.set_ylabel("Distance from Furthest Point")
@@ -409,31 +384,21 @@ class RobloxEDA:
             ax.axhline(y=1.34e+05, linestyle="dotted", color="black") # Measurement purposes
             plt.show()
         
-        # DBSCAN stuff
         df = self.df
-        
         # Find elbow / optimal Ɛ | optimal = approx. 134,000
         # elbow(df[['Dislikes', 'Likes']])
         
-        # Type of clustering that uses proximity radii of radius Ɛ to determine clusters
-        # Min-samples is minimum samples required in a circle to be considered a part of a cluster
-        # These points are called core points, and they can now generate their own radius
         model = DBSCAN(eps=1.34e+05, min_samples=4)
         model.fit(df[['Dislikes', 'Likes']])
         df['Cluster'] = model.labels_
-        
-        # Visualisation
+
         fig = plt.figure(figsize=(12,9))
         fig.suptitle("Likes and Dislikes for Each Game")
         ax = fig.add_subplot(111)
         sns.scatterplot(data=df, x='Likes', y='Dislikes', hue='Cluster', palette='viridis', ax=ax)
         plt.show()
         
-        # Additional, but important info 
-        # Number of points in each group
         counts = df.groupby(by='Cluster').count()
-        
-        # Details about games in each group
         for group in sorted(list(df['Cluster'].unique())):
             if group != 0:
                 print(f"\nGROUP {group}:")
