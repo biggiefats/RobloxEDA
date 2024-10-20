@@ -511,8 +511,7 @@ class RobloxEDA:
             plt.show()
             
             print(accuracy_score(y_true=y_test, y_pred=y_pred))
-            
-            
+                   
     def hypothesis7(self):
         """
         Question:
@@ -552,13 +551,13 @@ class RobloxEDA:
             # plt.show() # Remove if your PC is not good
             
         def visualise_7():
-            fig, axes = plt.subplots(figsize=(6,6), ncols=2)
-            
-            ax = axes[0]
+            fig, ax = plt.subplots(figsize=(6,6))
             ax.set_title("Logistic Curve via Sorted Lengths and Counts")
             ax.set_xlabel("Number of Letters")
             ax.set_ylabel("Arbitrary Measurement")
             sns.scatterplot(x=sorted(y), y=np.arange(1000), hue=y, palette='husl', ax=ax)
+            
+            plt.show()
             
         def logistic_regression_7():
             pca = PCA(0.95)
@@ -568,8 +567,5 @@ class RobloxEDA:
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
             score = accuracy_score(y_test, y_pred)
-            
-        logistic_regression_7()
-            
+              
 data = RobloxEDA()
-data.hypothesis7()
