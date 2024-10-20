@@ -9,6 +9,9 @@ and clean by **Pandas** and **Regular Expressions**.
 The data found was sourced from **https://romonitorstats.com/**.
 
 ## Prerequisites
+### Windows
+Install Python via [this link](https://www.python.org/downloads/windows/)
+
 To run the program, you will need the following libraries/packages via `pip install [name]`: 
 - Regular Expressions -> `regex`
 - Pandas -> `pandas`
