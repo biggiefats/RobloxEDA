@@ -21,6 +21,26 @@ To run the program, you will need the following libraries/packages via `pip inst
 - BeautifulSoup -> `beautifulsoup4`
 - Selenium -> `selenium`
 
+### Linux
+
+#### Ubuntu/Debian-based systems
+Update the package index: `sudo apt update`
+Install Python 3: `sudo apt install python3`
+For a specific version (e.g., Python 3.9): `sudo apt install python3.9`
+Verify the installation: `python3 --version`
+
+#### Red Hat/CentOS/Fedora-based systems
+Update the package index: `sudo dnf update`
+Install Python 3: `sudo dnf install python3`
+For a specific version (e.g., Python 3.9): `sudo dnf install python39`
+Verify the installation: vpython3 --versionv
+
+#### Arch Linux
+Update the package index: `sudo pacman -Syuv`
+Install Python 3: `sudo pacman -S python`
+For a specific version (e.g., Python 3.9): `sudo pacman -S python39`
+Verify the installation: `python3 --version`
+
 ## Questions / Hypotheses
 
 - Games that include a reference to an update in the **start** of their title will have a greater ratio 
