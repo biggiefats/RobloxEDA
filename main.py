@@ -6,25 +6,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.preprocessing import PolynomialFeatures, MinMaxScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB
+from sklearn.model_selection import train_test_split
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics import r2_score
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import r2_score, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from collections import defaultdict
-
-"""
-Questions/Hypotheses LEFT to explore:
-
-Do the likes, dislikes and total visits indicate whether
-or not a game's current players is above 10% of the number
-of favourites on game?
-(Naive Bayes)
-
-Classify games by how many UNIQUE letters they have.
-Does the general attributes of success to a game define
-the unique letters in the game?
-(Decision Tree Classifier)
-"""
 
 class RobloxEDA:
     def __init__(self):
@@ -404,5 +394,182 @@ class RobloxEDA:
                 print(f"\nGROUP {group}:")
                 print(df.query(f"Cluster == {group}"))
         
+    def hypothesis6(self):
+        """
+        Question:
+        Do the likes, dislikes and total visits indicate whether
+        or not a game's current players is above 10% of the number
+        of favourites on game?
+
+        Results:
+        (forgive me for nesting functions into the method)
+        
+        Using Naive Bayes is fairly inaccurate, averaging less than
+        50% success. This could mean that the answer to the question
+        is no. However, Naive Bayes classification may not work well
+        with such a dataset, for there are a lot more games that do
+        not satisfy the condition of favourites. Naive Bayes uses
+        probabilistic classification by weighing the chances of
+        events happening relative to other events. Furthermore,
+        Naive Bayes works better with independent outcomes. However,
+        some games may have similar popularity because the games
+        are extensions of others, or utilise a brand to make
+        multiple games.
+        
+        Using PCA and Logistic Regression as well as a scaler
+        works better than the Naive Bayes classification, averaging
+        out a 93% successs rate, but the model predicts that ALL the 
+        games do not satisfy the criteria. This may be a result of
+        a majority of games not having active players be above 1/10
+        of the total favourites. This is also a result of how linear
+        regression models work, for they would be similar to a Bernoulli
+        Naive Bayes classification model; two outcomes are only considered.
+        
+        A better method to use may be Decision Trees or Clustering, and that
+        may inform whether or not the exogenous variables can predict
+        the endogenous outcome.
+        
+        Therefore, based on the models used, the likes, dislikes and total
+        visits do not indicate whether or not a game's current
+        players is above 10% of the number of favourites on game.
+        """
+        
+        def naive_bayes_method():
+            """
+            Using naive bayes to answer the question.
+            """
+            
+            X = self.df[['Visits', 'Likes', 'Dislikes']]
+            y = pd.Series(self.df['Active'].astype(int) > (self.df['Favourites'].astype(int) / 10)).values
+
+            # Best to compare Multinomial, Complement and Bernoulli
+            # We do not know about how normal this data is; rule out GaussianNB
+            # We don't have categories of labels, only two possibilites; rule out CategoricalNB
+            
+            def best_model():
+                # They all score the same, so pick any
+                scores = np.zeros((3,1))
+                for i in range(20):
+                    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.6, shuffle=True)
+                    
+                    model1 = MultinomialNB()
+                    model1.fit(X_train, y_train)
+                    y1_pred = model1.predict(X_test)
+                    y1_score = accuracy_score(y_test, y1_pred)
+                    
+                    model2 = ComplementNB()
+                    model2.fit(X_train, y_train)
+                    y2_pred = model1.predict(X_test)
+                    y2_score = accuracy_score(y_test, y2_pred)
+                    
+                    model3 = BernoulliNB()
+                    model3.fit(X_train, y_train)
+                    y3_pred = model1.predict(X_test)
+                    y3_score = accuracy_score(y_test, y3_pred)
+                    
+                    scores[0] += y1_score
+                    scores[1] += y2_score
+                    scores[2] += y3_score
+                    
+            X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.6, shuffle=True)
+            
+            model = ComplementNB()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+
+            C = confusion_matrix(y_true=y_test, y_pred=y_pred)
+            display = ConfusionMatrixDisplay(confusion_matrix=C, display_labels=list(set(y_pred)))
+            display.plot()
+            plt.show()
+        
+        def pca_logistic_scaler_method():
+            """
+            Using PCA, logistic regression and a scaler to answer
+            the question.
+            """
+            
+            X = self.df[['Visits', 'Likes', 'Dislikes']]
+            y = pd.Series(self.df['Active'].astype(int) > (self.df['Favourites'].astype(int) / 10)).values
+            
+            X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.6, shuffle=True)
+            
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.transform(X_test)
+            
+            pca = PCA(0.975)
+            X_train = pca.fit_transform(X_train)
+            X_test = pca.transform(X_test)
+            
+            model = LogisticRegression(solver='saga', random_state=0, tol=0.1)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            
+            C = confusion_matrix(y_true=y_test, y_pred=y_pred)
+            display = ConfusionMatrixDisplay(confusion_matrix=C, display_labels=["False", "True"])
+            display.plot()
+            plt.show()
+            
+            print(accuracy_score(y_true=y_test, y_pred=y_pred))
+            
+            
+    def hypothesis7(self):
+        """
+        Question:
+        Classify games by how many UNIQUE letters they have.
+        
+        Does the general attributes of success to a game define
+        the unique letters in the game?
+        
+        Results:
+        Upon realisation, a Decision Tree is not a good model
+        for this question. The endogenous variable has too many
+        categories, which would make the tree very large. It has
+        an average success rate of 11%.
+        
+        Using a logistic regression method also returns a similar
+        success rate.
+        
+        Therefore, it would be assumed that the general attributes
+        of a game does not determine the unique letters of game.
+        
+        Additional Findings:
+        When plotting the lengths in order, with an arbitrary
+        x axis, we get a sigmoid curve.
+        """
+        X = self.df.iloc[:, 1:]
+        y = self.df['Name'].str.lower().str.replace('[^a-z]', '', regex=True).apply(lambda x: len(set(x))).values
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.6, shuffle=True)
+        
+        def decision_tree_method_7():
+            model = DecisionTreeClassifier()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            score = accuracy_score(y_test, y_pred)
+            
+            plot_tree(decision_tree=model, filled=True, rounded=True)
+    
+            # plt.show() # Remove if your PC is not good
+            
+        def visualise_7():
+            fig, axes = plt.subplots(figsize=(6,6), ncols=2)
+            
+            ax = axes[0]
+            ax.set_title("Logistic Curve via Sorted Lengths and Counts")
+            ax.set_xlabel("Number of Letters")
+            ax.set_ylabel("Arbitrary Measurement")
+            sns.scatterplot(x=sorted(y), y=np.arange(1000), hue=y, palette='husl', ax=ax)
+            
+        def logistic_regression_7():
+            pca = PCA(0.95)
+            X_train = pca.fit_transform(X_train)
+            X_test = pca.transform(X_test)
+            model = LogisticRegression(solver='liblinear')
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            score = accuracy_score(y_test, y_pred)
+            
+        logistic_regression_7()
+            
 data = RobloxEDA()
-data.hypothesis2()
+data.hypothesis7()
