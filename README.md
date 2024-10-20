@@ -28,6 +28,7 @@ To run the program, you will need the following libraries/packages via `pip inst
 - Install Python 3: `sudo apt install python3`
 - For a specific version (e.g., Python 3.9): `sudo apt install python3.9`
 - Verify the installation: `python3 --version`
+- Install packages via `sudo apt-get install python3-[name]`
 
 #### Red Hat/CentOS/Fedora-based systems
 - Update the package index: `sudo dnf update`
